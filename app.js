@@ -34,12 +34,26 @@ passport.serializeUser(User.serializeUser());
 //       ROUTES
 //=====================//
 
+// Route: GET/
 app.get("/", function(req, res) {
     res.render("HOME");
 })
 
+// Route: GET/secret
 app.get("/secret", function(req, res) {
     res.render("secret")
+});
+
+// AUTH ROUTES
+
+// Route: GET/resgister
+app.get("/register", function(req, res) {
+    res.render("register");
+});
+
+// Route: POST/register
+app.post("/register", function(req, res) {
+    res.send("REGISTER POST ROUTE");
 });
 
 app.listen(8000, function() {
