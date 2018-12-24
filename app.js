@@ -11,6 +11,28 @@ mongoose.connect("mongodb://localhost:27017/auth_demo_app", {useNewUrlParser: tr
 
 var app = express();
 app.set('view engine', 'ejs');
+// tell express to use Passport (2 lines)
+app.use(passport.initialize());
+app.use(passport.session());
+// to use Express Session
+app.use(require("express-session")({
+    secret: "Shikoba is the best",
+    resave: false,
+    saveUninitialized: false
+}));
+
+// We are not having to define deserializeUser & serializeUser because we are using the
+// ones that come with passport-local-mongoose by plugging it into userSchema.plugin() in user.js
+// - responsible for reading the session & taking data from it:
+passport.deserializeUser(User.deserializeUser());
+// - encodes it and puts it back in session
+passport.serializeUser(User.serializeUser());
+
+
+
+//=====================//
+//       ROUTES
+//=====================//
 
 app.get("/", function(req, res) {
     res.render("HOME");
