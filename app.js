@@ -14,6 +14,8 @@ app.set('view engine', 'ejs');
 // tell express to use Passport (2 lines)
 app.use(passport.initialize());
 app.use(passport.session());
+// connects body-parser
+app.use(bodyParser.urlencoded({extended: true}));
 // to use Express Session
 app.use(require("express-session")({
     secret: "Shikoba is the best",
@@ -53,7 +55,21 @@ app.get("/register", function(req, res) {
 
 // Route: POST/register
 app.post("/register", function(req, res) {
-    res.send("REGISTER POST ROUTE");
+    req.body.username;
+    req.body.password;
+    User.register(new User({username: req.body.username}), req.body.password, function(err, user) {
+        if(err) {
+            console.log(err);
+            // return is used here to short-circuit and exit in case something is wrong to go back to registration form
+            return res.render('register');
+        }
+            // ^using an 'else' here would not make this work
+            // it will run serialize method using 'local' strategy (vs. Facebook or Twiiter etc.)
+            passport.authenticate("local")(req, res, function() {
+                res.redirect("/secret");
+            });
+        
+    });
 });
 
 app.listen(8000, function() {
