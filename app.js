@@ -25,35 +25,36 @@ app.use(require("express-session")({
 
 // We are not having to define deserializeUser & serializeUser because we are using the
 // ones that come with passport-local-mongoose by plugging it into userSchema.plugin() in user.js
+// - creates new local strategy using User.authenticate() (coming from user.js -> passportLocalMongoose plugged into userSchema)
+passport.use(new localStrategy(User.authenticate()));
 // - responsible for reading the session & taking data from it:
 passport.deserializeUser(User.deserializeUser());
 // - encodes it and puts it back in session
 passport.serializeUser(User.serializeUser());
 
 
+//===============================//
+//            ROUTES
+//===============================//
 
-//=====================//
-//       ROUTES
-//=====================//
-
-// Route: GET/
+// Route: GET:/
 app.get("/", function(req, res) {
     res.render("HOME");
 })
 
-// Route: GET/secret
+// Route: GET:/secret
 app.get("/secret", function(req, res) {
     res.render("secret")
 });
 
-// AUTH ROUTES
+//----------AUTH ROUTES----------//
 
-// Route: GET/resgister
+// Route: GET:/resgister
 app.get("/register", function(req, res) {
     res.render("register");
 });
 
-// Route: POST/register
+// Route: POST:/register
 app.post("/register", function(req, res) {
     req.body.username;
     req.body.password;
@@ -71,6 +72,31 @@ app.post("/register", function(req, res) {
         
     });
 });
+
+//----------LOGIN ROUTES----------//
+
+// Route: GET:/login
+// renders login form
+app.get("/login", function(req, res) {
+    res.render("login");
+});
+
+// Route: POST:/login
+// login logic
+// middleware used; between the route and the handler (function) at the end 
+app.post("/login", passport.authenticate("local", {
+    successRedirect: "/secret",
+    failureRedirect: "/login"
+}), function(req, res) {
+});
+
+// ROTE: GET:/logout
+app.get("/logout", function(req, res) {
+    // Passport will destroy all the user data in the session i.e. logout
+    req.logout();
+    res.redirect("/");
+})
+
 
 app.listen(8000, function() {
     console.log("Server running.");
