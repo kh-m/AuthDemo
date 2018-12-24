@@ -11,9 +11,6 @@ mongoose.connect("mongodb://localhost:27017/auth_demo_app", {useNewUrlParser: tr
 
 var app = express();
 app.set('view engine', 'ejs');
-// tell express to use Passport (2 lines)
-app.use(passport.initialize());
-app.use(passport.session());
 // connects body-parser
 app.use(bodyParser.urlencoded({extended: true}));
 // to use Express Session
@@ -22,6 +19,9 @@ app.use(require("express-session")({
     resave: false,
     saveUninitialized: false
 }));
+// tell express to use Passport (2 lines)
+app.use(passport.initialize());
+app.use(passport.session());
 
 // We are not having to define deserializeUser & serializeUser because we are using the
 // ones that come with passport-local-mongoose by plugging it into userSchema.plugin() in user.js
@@ -39,11 +39,12 @@ passport.serializeUser(User.serializeUser());
 
 // Route: GET:/
 app.get("/", function(req, res) {
-    res.render("HOME");
-})
+    res.render("home");
+});
 
 // Route: GET:/secret
-app.get("/secret", function(req, res) {
+// middleware isLoggedIn will check if user is logged in
+app.get("/secret", isLoggedIn, function(req, res) {
     res.render("secret")
 });
 
@@ -56,20 +57,17 @@ app.get("/register", function(req, res) {
 
 // Route: POST:/register
 app.post("/register", function(req, res) {
-    req.body.username;
-    req.body.password;
     User.register(new User({username: req.body.username}), req.body.password, function(err, user) {
         if(err) {
             console.log(err);
             // return is used here to short-circuit and exit in case something is wrong to go back to registration form
             return res.render('register');
         }
-            // ^using an 'else' here would not make this work
+            // ^using an 'else' here would not make this work, because return was used
             // it will run serialize method using 'local' strategy (vs. Facebook or Twiiter etc.)
             passport.authenticate("local")(req, res, function() {
                 res.redirect("/secret");
             });
-        
     });
 });
 
@@ -87,7 +85,7 @@ app.get("/login", function(req, res) {
 app.post("/login", passport.authenticate("local", {
     successRedirect: "/secret",
     failureRedirect: "/login"
-}), function(req, res) {
+}) ,function(req, res) {
 });
 
 // ROTE: GET:/logout
@@ -95,8 +93,17 @@ app.get("/logout", function(req, res) {
     // Passport will destroy all the user data in the session i.e. logout
     req.logout();
     res.redirect("/");
-})
+});
 
+// to be used as middleware for /secret
+function isLoggedIn(req, res, next) {
+    if(req.isAuthenticated()) {
+        console.log("you may enter");
+        return next();
+    }
+    console.log("didn't work");
+    res.redirect("/login");
+};
 
 app.listen(8000, function() {
     console.log("Server running.");
